@@ -1,0 +1,21 @@
+{
+  "policy_name": "trained_imitation_supervisor",
+  "method": "tiny_imitation_from_expert_traces",
+  "description": "No-GPU imitation fallback. Learns expert-style action order from expert_traces.jsonl and uses dynamic policy escalation.",
+  "base_plan": [
+    "assign_research",
+    "assign_ops",
+    "assign_policy",
+    "assign_communication",
+    "audit_ops",
+    "audit_policy",
+    "cross_check_research_and_ops",
+    "cross_check_research_and_communication",
+    "select_safe_fix",
+    "request_message_revision"
+  ],
+  "dynamic_rules": [
+    "If policy_risk_detected and reject_or_escalate not completed, choose reject_or_escalate.",
+    "Otherwise approve after verification actions are complete."
+  ]
+}

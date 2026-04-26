@@ -1,0 +1,111 @@
+name: shadow-supervisor-openenv
+version: "1.0.0"
+description: >
+  A partially observable multi-agent oversight environment where a supervisor
+  learns to detect silent failures before unsafe approval.
+
+framework:
+  package: openenv-core
+  version: "0.2.3"
+
+environment:
+  module: env.openenv_adapter
+  class: ShadowSupervisorOpenEnv
+  factory: make_env
+  reset_method: reset
+  step_method: step
+  state_method: state
+
+base_environment:
+  module: env.shadow_supervisor_env
+  class: ShadowSupervisorEnv
+
+models:
+  action:
+    module: env.openenv_adapter
+    class: ShadowSupervisorAction
+  observation:
+    module: env.openenv_adapter
+    class: ShadowSupervisorObservation
+  state:
+    module: env.openenv_adapter
+    class: ShadowSupervisorState
+
+observation_space:
+  type: object
+  fields:
+    observation:
+      type: dict
+      description: Full Shadow Supervisor environment observation.
+    reward:
+      type: number
+      description: Reward from latest environment step.
+    done:
+      type: boolean
+      description: Whether the episode has terminated.
+    info:
+      type: dict
+      description: Step metadata and reward explanations.
+
+action_space:
+  type: categorical
+  actions:
+    - assign_research
+    - assign_ops
+    - assign_policy
+    - assign_communication
+    - audit_ops
+    - audit_policy
+    - cross_check_research_and_ops
+    - cross_check_research_and_communication
+    - select_safe_fix
+    - request_message_revision
+    - reject_or_escalate
+    - approve
+
+reward:
+  type: multi_component
+  components:
+    - evidence_gathering
+    - risk_detection
+    - cross_checking
+    - safe_fix_selection
+    - communication_revision
+    - safe_approval
+    - unsafe_approval_penalty
+    - repeated_action_penalty
+    - action_efficiency_penalty
+    - anti_reward_hacking_penalty
+
+episode:
+  train_scenarios: data/scenarios_train.json
+  eval_scenarios: data/scenarios_eval.json
+  max_steps: 12
+
+server:
+  module: server.app
+  health_endpoint: /health
+  reset_endpoint: /reset
+  step_endpoint: /step
+  state_endpoint: /state
+
+submission:
+  hf_space_entrypoint: app.py
+  training_notebook: notebooks/shadow_supervisor_training_run.ipynb
+  results:
+    - outputs/policy_comparison_hardened.csv
+    - outputs/baseline_vs_trained.png
+    - outputs/winning_rl_reward_curve.png
+    - outputs/winning_training_loss.png
+    - outputs/winning_unsafe_approval_rate.png
+    - outputs/rl_safety_curve.png
+
+metadata:
+  primary_theme: multi-agent-interactions
+  secondary_themes:
+    - long-horizon-planning
+    - world-modeling
+    - self-improvement
+  partial_observability: true
+  reward_hacking_baseline: spam_all_actions_supervisor
+  trained_policy: rl_trained_supervisor

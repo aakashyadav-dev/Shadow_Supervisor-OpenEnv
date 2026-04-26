@@ -1,0 +1,31 @@
+[project]
+name = "shadow-supervisor-openenv"
+version = "0.1.0"
+description = "OpenEnv-compatible multi-agent oversight benchmark for detecting silent failures."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+  { name = "Shadow Supervisor Team" }
+]
+
+dependencies = [
+  "openenv",
+  "gymnasium",
+  "numpy",
+  "pandas",
+  "matplotlib",
+  "scikit-learn",
+  "pydantic",
+  "tqdm",
+  "rich",
+  "gradio",
+  "datasets",
+  "transformers",
+  "trl",
+  "accelerate",
+  "torch"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["env*", "agents*", "training*", "evaluation*", "app*"]

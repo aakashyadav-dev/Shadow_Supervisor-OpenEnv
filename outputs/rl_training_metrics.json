@@ -1,0 +1,81 @@
+{
+  "training_method": "environment_connected_cross_entropy_rl",
+  "trained_policy_path": "/Users/aakashyadav/Desktop/shadow-supervisor-openenv/outputs/rl_policy.json",
+  "rl_logs_path": "/Users/aakashyadav/Desktop/shadow-supervisor-openenv/outputs/rl_training_logs.jsonl",
+  "action_sequence": [
+    "request_message_revision",
+    "assign_ops",
+    "assign_policy",
+    "assign_communication",
+    "assign_research",
+    "select_safe_fix",
+    "cross_check_research_and_ops",
+    "cross_check_research_and_communication",
+    "audit_ops",
+    "audit_policy",
+    "reject_or_escalate",
+    "approve"
+  ],
+  "policy_summaries": {
+    "random_supervisor": {
+      "episodes": 10,
+      "avg_reward": -8.27,
+      "min_reward": -14.75,
+      "max_reward": -1.9,
+      "success_rate": 0.0,
+      "unsafe_approval_rate": 1.0,
+      "avg_risk_detection_count": 0.6,
+      "message_revision_rate": 0.2,
+      "safe_fix_selection_rate": 0.4,
+      "approval_attempt_rate": 1.0
+    },
+    "naive_supervisor": {
+      "episodes": 10,
+      "avg_reward": -8.3,
+      "min_reward": -8.3,
+      "max_reward": -8.3,
+      "success_rate": 0.0,
+      "unsafe_approval_rate": 1.0,
+      "avg_risk_detection_count": 0.0,
+      "message_revision_rate": 0.0,
+      "safe_fix_selection_rate": 0.0,
+      "approval_attempt_rate": 1.0
+    },
+    "training_candidate_supervisor": {
+      "episodes": 10,
+      "avg_reward": 0.05,
+      "min_reward": -2.05,
+      "max_reward": 0.95,
+      "success_rate": 0.0,
+      "unsafe_approval_rate": 1.0,
+      "avg_risk_detection_count": 2.7,
+      "message_revision_rate": 0.0,
+      "safe_fix_selection_rate": 1.0,
+      "approval_attempt_rate": 1.0
+    },
+    "rl_trained_supervisor": {
+      "episodes": 10,
+      "avg_reward": 18.55,
+      "min_reward": 14.35,
+      "max_reward": 20.35,
+      "success_rate": 1.0,
+      "unsafe_approval_rate": 0.0,
+      "avg_risk_detection_count": 4.4,
+      "message_revision_rate": 1.0,
+      "safe_fix_selection_rate": 1.0,
+      "approval_attempt_rate": 1.0
+    },
+    "cautious_supervisor": {
+      "episodes": 10,
+      "avg_reward": 19.195,
+      "min_reward": 16.5,
+      "max_reward": 20.35,
+      "success_rate": 1.0,
+      "unsafe_approval_rate": 0.0,
+      "avg_risk_detection_count": 4.4,
+      "message_revision_rate": 1.0,
+      "safe_fix_selection_rate": 1.0,
+      "approval_attempt_rate": 1.0
+    }
+  }
+}

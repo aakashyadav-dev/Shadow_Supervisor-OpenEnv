@@ -1,0 +1,7 @@
+policy,episodes,avg_reward,min_reward,max_reward,success_rate,unsafe_approval_rate,avg_risk_detection_count,message_revision_rate,safe_fix_selection_rate,approval_attempt_rate
+random_supervisor,10,-6.485,-13.9,3.95,0.0,1.0,0.6,0.4,0.3,1.0
+naive_supervisor,10,-8.3,-8.3,-8.3,0.0,1.0,0.0,0.0,0.0,1.0
+training_candidate_supervisor,10,0.05,-2.05,0.95,0.0,1.0,2.7,0.0,1.0,1.0
+spam_all_actions_supervisor,10,0.55,-3.65,2.35,0.0,1.0,2.4,1.0,1.0,1.0
+rl_trained_supervisor,10,18.55,14.35,20.35,1.0,0.0,4.4,1.0,1.0,1.0
+cautious_supervisor,10,19.195,16.5,20.35,1.0,0.0,4.4,1.0,1.0,1.0

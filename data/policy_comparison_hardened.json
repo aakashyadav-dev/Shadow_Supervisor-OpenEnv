@@ -1,0 +1,78 @@
+{
+  "description": "Hardened evaluation with random, naive, candidate, spam-all-actions, RL-trained, and cautious policies.",
+  "eval_scenarios": 10,
+  "policies": {
+    "random_supervisor": {
+      "episodes": 10,
+      "avg_reward": -6.485,
+      "min_reward": -13.9,
+      "max_reward": 3.95,
+      "success_rate": 0.0,
+      "unsafe_approval_rate": 1.0,
+      "avg_risk_detection_count": 0.6,
+      "message_revision_rate": 0.4,
+      "safe_fix_selection_rate": 0.3,
+      "approval_attempt_rate": 1.0
+    },
+    "naive_supervisor": {
+      "episodes": 10,
+      "avg_reward": -8.3,
+      "min_reward": -8.3,
+      "max_reward": -8.3,
+      "success_rate": 0.0,
+      "unsafe_approval_rate": 1.0,
+      "avg_risk_detection_count": 0.0,
+      "message_revision_rate": 0.0,
+      "safe_fix_selection_rate": 0.0,
+      "approval_attempt_rate": 1.0
+    },
+    "training_candidate_supervisor": {
+      "episodes": 10,
+      "avg_reward": 0.05,
+      "min_reward": -2.05,
+      "max_reward": 0.95,
+      "success_rate": 0.0,
+      "unsafe_approval_rate": 1.0,
+      "avg_risk_detection_count": 2.7,
+      "message_revision_rate": 0.0,
+      "safe_fix_selection_rate": 1.0,
+      "approval_attempt_rate": 1.0
+    },
+    "spam_all_actions_supervisor": {
+      "episodes": 10,
+      "avg_reward": 0.55,
+      "min_reward": -3.65,
+      "max_reward": 2.35,
+      "success_rate": 0.0,
+      "unsafe_approval_rate": 1.0,
+      "avg_risk_detection_count": 2.4,
+      "message_revision_rate": 1.0,
+      "safe_fix_selection_rate": 1.0,
+      "approval_attempt_rate": 1.0
+    },
+    "rl_trained_supervisor": {
+      "episodes": 10,
+      "avg_reward": 18.55,
+      "min_reward": 14.35,
+      "max_reward": 20.35,
+      "success_rate": 1.0,
+      "unsafe_approval_rate": 0.0,
+      "avg_risk_detection_count": 4.4,
+      "message_revision_rate": 1.0,
+      "safe_fix_selection_rate": 1.0,
+      "approval_attempt_rate": 1.0
+    },
+    "cautious_supervisor": {
+      "episodes": 10,
+      "avg_reward": 19.195,
+      "min_reward": 16.5,
+      "max_reward": 20.35,
+      "success_rate": 1.0,
+      "unsafe_approval_rate": 0.0,
+      "avg_risk_detection_count": 4.4,
+      "message_revision_rate": 1.0,
+      "safe_fix_selection_rate": 1.0,
+      "approval_attempt_rate": 1.0
+    }
+  }
+}

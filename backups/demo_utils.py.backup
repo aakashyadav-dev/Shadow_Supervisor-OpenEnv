@@ -1,0 +1,439 @@
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+from typing import Any, Dict, List, Tuple
+
+import pandas as pd
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+from env.shadow_supervisor_env import ShadowSupervisorEnv
+from env.scenarios import load_eval_scenarios
+from agents.naive_policy import NaiveSupervisorPolicy
+from agents.training_candidate_policy import TrainingCandidatePolicy
+from agents.cautious_policy import CautiousSupervisorPolicy
+from agents.trained_imitation_policy import TrainedImitationPolicy
+from agents.rl_policy import RLEnvTrainedPolicy
+
+DATA_DIR = ROOT_DIR / "data"
+OUTPUTS_DIR = ROOT_DIR / "outputs"
+
+POLICY_CLASSES = {
+    "Naive Supervisor": NaiveSupervisorPolicy,
+    "Training Candidate": TrainingCandidatePolicy,
+    "Trained Imitation": TrainedImitationPolicy,
+    "RL-Trained Supervisor": RLEnvTrainedPolicy,
+    "Cautious Supervisor": CautiousSupervisorPolicy,
+}
+
+POLICY_LABELS = {
+    "random_supervisor": "Random Supervisor",
+    "naive_supervisor": "Naive Supervisor",
+    "training_candidate_supervisor": "Training Candidate",
+    "spam_all_actions_supervisor": "Spam-All-Actions",
+    "trained_imitation_supervisor": "Trained Imitation",
+    "rl_trained_supervisor": "RL-Trained Supervisor",
+    "cautious_supervisor": "Cautious Supervisor",
+}
+
+POLICY_EXPLANATIONS = {
+    "naive_supervisor": "Approves too early after checking only operations and communication.",
+    "training_candidate_supervisor": "Detects some technical risk but misses full communication and approval safety.",
+    "trained_imitation_supervisor": "Imitates expert traces and follows a safe oversight structure.",
+    "rl_trained_supervisor": "Trained through environment rollouts to maximize reward and avoid unsafe approval.",
+    "cautious_supervisor": "Expert-style supervisor that performs full evidence gathering and risk resolution.",
+}
+
+
+def load_json(path: Path, default: Any = None) -> Any:
+    if not path.exists():
+        return default
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def get_eval_scenarios() -> List[Dict[str, Any]]:
+    try:
+        return load_eval_scenarios()
+    except Exception:
+        return []
+
+
+def scenario_choices() -> List[str]:
+    scenarios = get_eval_scenarios()
+    if not scenarios:
+        return ["0: No scenarios found"]
+
+    choices = []
+    for index, scenario in enumerate(scenarios):
+        case_id = scenario.get("case_id", f"case_{index}")
+        domain = scenario.get("domain", "unknown")
+        incident = scenario.get("incident", "")[:90]
+        choices.append(f"{index}: {case_id} | {domain} | {incident}")
+
+    return choices
+
+
+def parse_scenario_index(choice: str) -> int:
+    try:
+        return int(str(choice).split(":", 1)[0])
+    except Exception:
+        return 0
+
+
+def get_scenario(choice: str) -> Dict[str, Any]:
+    scenarios = get_eval_scenarios()
+    if not scenarios:
+        return {}
+
+    index = parse_scenario_index(choice)
+    index = max(0, min(index, len(scenarios) - 1))
+    return scenarios[index]
+
+
+def format_action_flow(actions: List[str]) -> str:
+    if not actions:
+        return "`No action flow available.`"
+    return " → ".join(f"`{action}`" for action in actions)
+
+
+def format_hidden_failures(items: List[str]) -> str:
+    if not items:
+        return "✅ No hidden failures in this scenario."
+    return "\n".join(f"- `{item}`" for item in items)
+
+
+def scenario_bundle(choice: str) -> Tuple[str, str, str, str, str, str, str, str]:
+    scenario = get_scenario(choice)
+
+    if not scenario:
+        msg = "No scenario found. Run `python training/build_real_data.py` first."
+        return msg, msg, msg, msg, msg, msg, msg, msg
+
+    worker_outputs = scenario.get("worker_outputs", {})
+    source_notes = scenario.get("source_notes", {})
+
+    case_id = scenario.get("case_id", "unknown")
+    domain = scenario.get("domain", "unknown")
+    incident = scenario.get("incident", "No incident found.")
+
+    overview = f"""
+# `{case_id}`
+
+**Domain:** `{domain}`
+
+**Incident:** {incident}
+
+This case simulates a realistic multi-agent incident workflow. The supervisor must decide whether worker outputs are safe to trust before approval.
+"""
+
+    research = f"""
+## 🔎 Research Agent
+
+{worker_outputs.get("research_agent", "No research output.")}
+"""
+
+    operations = f"""
+## 🛠️ Operations Agent
+
+{worker_outputs.get("ops_agent", "No operations output.")}
+"""
+
+    policy = f"""
+## 📜 Policy Agent
+
+{worker_outputs.get("policy_agent", "No policy output.")}
+"""
+
+    communication = f"""
+## 📣 Communication Agent
+
+{worker_outputs.get("communication_agent", "No communication output.")}
+"""
+
+    hidden = f"""
+# 🚨 Hidden Failures
+
+These are the risks the supervisor must uncover through auditing and cross-checking.
+
+{format_hidden_failures(scenario.get("hidden_failures", []))}
+"""
+
+    expert = f"""
+# ✅ Expert Action Flow
+
+A safe supervisor should collect evidence, audit risk, revise unsafe communication, and approve only after resolution.
+
+{format_action_flow(scenario.get("correct_actions", []))}
+"""
+
+    source = f"""
+# 📌 Source Note
+
+**Source family:** {source_notes.get("source_family", "Public-source-inspired synthetic scenario")}
+
+**Data policy:** {source_notes.get("data_policy", "Synthetic scenario inspired by public incident and postmortem patterns. It does not copy private incident details.")}
+"""
+
+    return overview, research, operations, policy, communication, hidden, expert, source
+
+
+def run_policy(policy_name: str, scenario_choice: str) -> Dict[str, Any]:
+    index = parse_scenario_index(scenario_choice)
+
+    env = ShadowSupervisorEnv(
+        scenario_path=str(DATA_DIR / "scenarios_eval.json"),
+        seed=42 + index,
+    )
+
+    policy_cls = POLICY_CLASSES.get(policy_name, CautiousSupervisorPolicy)
+    policy = policy_cls()
+
+    result = policy.run_episode(env, scenario_index=index, seed=42 + index)
+    result["episode_trace"] = env.render_trace()
+    return result
+
+
+def trace_to_dataframe(result: Dict[str, Any]) -> pd.DataFrame:
+    rows = []
+
+    for step_index, step in enumerate(result.get("trace", []), start=1):
+        info = step.get("info", {})
+        state_after = step.get("state_after", {})
+
+        rows.append(
+            {
+                "Step": step_index,
+                "Action": step.get("action"),
+                "Reward": step.get("reward"),
+                "Done": step.get("done"),
+                "Message": info.get("message"),
+                "Step Cost": info.get("step_cost", ""),
+                "Risk Flags": ", ".join(state_after.get("risk_flags", [])),
+                "Resolved Risks": ", ".join(state_after.get("resolved_risks", [])),
+            }
+        )
+
+    return pd.DataFrame(rows)
+
+
+def result_to_markdown(result: Dict[str, Any]) -> str:
+    policy_name = result.get("policy", "unknown_policy")
+    label = POLICY_LABELS.get(policy_name, policy_name)
+    explanation = POLICY_EXPLANATIONS.get(policy_name, "")
+
+    success = bool(result.get("success"))
+    status = "✅ SAFE SUCCESS" if success else "❌ UNSAFE / FAILED"
+    unsafe = "Yes" if result.get("unsafe_approval") else "No"
+    reward = result.get("total_reward")
+    case_id = result.get("case_id")
+    actions = [step.get("action", "") for step in result.get("trace", [])]
+
+    return f"""
+# {label}
+
+## {status}
+
+**Policy behavior:** {explanation}
+
+| Metric | Value |
+|---|---:|
+| Case ID | `{case_id}` |
+| Total Reward | `{reward}` |
+| Unsafe Approval | `{unsafe}` |
+| Steps | `{len(actions)}` |
+
+## Action Sequence
+
+{format_action_flow(actions)}
+"""
+
+
+def run_live_demo(policy_name: str, scenario_choice: str):
+    result = run_policy(policy_name, scenario_choice)
+    return result_to_markdown(result), trace_to_dataframe(result)
+
+
+def judge_demo(scenario_choice: str):
+    demo_policies = [
+        "Naive Supervisor",
+        "Training Candidate",
+        "RL-Trained Supervisor",
+        "Cautious Supervisor",
+    ]
+
+    rows = []
+    details = []
+
+    for policy_name in demo_policies:
+        result = run_policy(policy_name, scenario_choice)
+        trace_df = trace_to_dataframe(result)
+
+        success = bool(result.get("success"))
+        status = "SAFE" if success else "UNSAFE"
+
+        rows.append(
+            {
+                "Policy": policy_name,
+                "Status": status,
+                "Reward": result.get("total_reward"),
+                "Steps": len(trace_df),
+                "Unsafe Approval": "Yes" if result.get("unsafe_approval") else "No",
+                "Last Action": trace_df.iloc[-1]["Action"] if not trace_df.empty else "",
+            }
+        )
+
+        details.append(result_to_markdown(result))
+
+    interpretation = """
+# Judge Interpretation
+
+**Naive Supervisor** fails because it approves too early.
+
+**Training Candidate** detects some technical risk but still misses full safety requirements.
+
+**RL-Trained Supervisor** and **Cautious Supervisor** gather evidence, resolve risk, revise unsafe communication, and approve only when safe.
+"""
+
+    return pd.DataFrame(rows), interpretation + "\n\n---\n\n" + "\n\n---\n\n".join(details)
+
+
+def policy_comparison_dataframe() -> pd.DataFrame:
+    preferred_paths = [
+        OUTPUTS_DIR / "policy_comparison_hardened.csv",
+        OUTPUTS_DIR / "policy_comparison_rl.csv",
+        OUTPUTS_DIR / "policy_comparison_with_trained.csv",
+        OUTPUTS_DIR / "policy_comparison.csv",
+    ]
+
+    for path in preferred_paths:
+        if path.exists():
+            df = pd.read_csv(path)
+            if "policy" in df.columns and "policy_label" not in df.columns:
+                df.insert(
+                    1,
+                    "policy_label",
+                    df["policy"].map(lambda x: POLICY_LABELS.get(x, x)),
+                )
+            return df
+
+    data = load_json(DATA_DIR / "policy_comparison_hardened.json", default={})
+    if not data:
+        data = load_json(DATA_DIR / "policy_comparison.json", default={})
+
+    rows = []
+    for policy_name, metrics in data.get("policies", {}).items():
+        row = {
+            "policy": policy_name,
+            "policy_label": POLICY_LABELS.get(policy_name, policy_name),
+        }
+        row.update(metrics)
+        rows.append(row)
+
+    return pd.DataFrame(rows)
+
+
+def training_metrics_markdown() -> str:
+    rl_metrics = load_json(OUTPUTS_DIR / "rl_training_metrics.json", default={})
+    imitation_metrics = load_json(OUTPUTS_DIR / "training_metrics.json", default={})
+    metrics = rl_metrics or imitation_metrics
+
+    if not metrics:
+        return """
+# No Training Metrics Found
+
+Run these commands first:
+
+- `python training/build_expert_dataset.py`
+- `python training/train_trl.py`
+- `python training/train_env_rl.py`
+- `python evaluation/generate_winning_plots.py`
+"""
+
+    learned_plan = metrics.get("action_sequence") or metrics.get("learned_plan", [])
+    summaries = metrics.get("policy_summaries", {})
+
+    lines = [
+        "# Training Evidence",
+        "",
+        f"**Training method:** `{metrics.get('training_method', 'unknown')}`",
+        "",
+        "The final project includes environment-connected RL training plus fallback imitation/SFT data.",
+        "",
+        "## Learned Policy Sequence",
+        "",
+        format_action_flow(learned_plan),
+        "",
+        "## Policy Summaries",
+        "",
+    ]
+
+    for policy_name, summary in summaries.items():
+        label = POLICY_LABELS.get(policy_name, policy_name)
+        lines.extend(
+            [
+                f"### {label}",
+                "",
+                f"- **Average reward:** `{summary.get('avg_reward')}`",
+                f"- **Success rate:** `{summary.get('success_rate')}`",
+                f"- **Unsafe approval rate:** `{summary.get('unsafe_approval_rate')}`",
+                f"- **Message revision rate:** `{summary.get('message_revision_rate')}`",
+                "",
+            ]
+        )
+
+    return "\n".join(lines)
+
+
+def project_overview_markdown() -> str:
+    return """
+# Shadow Supervisor
+
+**Shadow Supervisor** is a multi-agent oversight benchmark for training supervisor agents to detect silent failures before unsafe approval.
+
+## One-line pitch
+
+Most agent benchmarks test task completion.  
+**Shadow Supervisor tests safe approval.**
+
+## Capability gap
+
+Multi-agent workflows can appear complete while still hiding serious failure modes:
+
+- unsafe operations recommendations
+- missing policy escalation
+- overconfident stakeholder messages
+- research / operations mismatches
+- unresolved customer impact
+
+## Environment design
+
+The supervisor receives outputs from four worker agents:
+
+| Agent | Role |
+|---|---|
+| Research Agent | Surfaces facts, symptoms, signals, and root-cause hints |
+| Operations Agent | Suggests technical mitigation |
+| Policy Agent | Checks escalation, compliance, and approval rules |
+| Communication Agent | Drafts stakeholder/customer messaging |
+
+The supervisor can audit, cross-check, revise, reject/escalate, or approve.
+
+## Training story
+
+We compare random, naive, candidate, reward-hacking, RL-trained, and cautious/expert supervisors.
+
+The RL-trained supervisor learns through environment rollouts to reduce unsafe approval and reach near-expert reward.
+"""
+
+
+def plot_paths() -> Dict[str, str]:
+    return {
+        "reward_curve": str(OUTPUTS_DIR / "reward_curve.png"),
+        "success_rate": str(OUTPUTS_DIR / "success_rate.png"),
+        "unsafe_approval_rate": str(OUTPUTS_DIR / "unsafe_approval_rate.png"),
+        "risk_detection_rate": str(OUTPUTS_DIR / "risk_detection_rate.png"),
+    }

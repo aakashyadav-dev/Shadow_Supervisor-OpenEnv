@@ -1,0 +1,31 @@
+{
+  "description": "Policy comparison generated from public-source-inspired synthetic scenarios. Used to demonstrate reward and safety improvement.",
+  "naive_supervisor": {
+    "episodes": 50,
+    "avg_reward": -8.0,
+    "success_rate": 0.0,
+    "unsafe_approval_rate": 1.0,
+    "avg_risk_detection_count": 0.0
+  },
+  "training_candidate_supervisor": {
+    "episodes": 50,
+    "avg_reward": 6.22,
+    "success_rate": 0.36,
+    "unsafe_approval_rate": 0.64,
+    "avg_risk_detection_count": 2.46
+  },
+  "cautious_supervisor": {
+    "episodes": 50,
+    "avg_reward": 20.12,
+    "success_rate": 1.0,
+    "unsafe_approval_rate": 0.0,
+    "avg_risk_detection_count": 3.3
+  },
+  "expert_supervisor": {
+    "episodes": 300,
+    "avg_reward": 19.867,
+    "success_rate": 1.0,
+    "unsafe_approval_rate": 0.0,
+    "avg_risk_detection_count": 3.267
+  }
+}

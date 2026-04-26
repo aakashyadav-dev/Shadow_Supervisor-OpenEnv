@@ -1,0 +1,16 @@
+{
+  "actions": [
+    "assign_research",
+    "assign_ops",
+    "assign_policy",
+    "assign_communication",
+    "audit_ops",
+    "audit_policy",
+    "cross_check_research_and_ops",
+    "cross_check_research_and_communication",
+    "select_safe_fix",
+    "request_message_revision",
+    "reject_or_escalate",
+    "approve"
+  ]
+}

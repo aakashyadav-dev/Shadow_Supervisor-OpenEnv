@@ -1,0 +1,5 @@
+policy,episodes,avg_reward,min_reward,max_reward,success_rate,unsafe_approval_rate,avg_risk_detection_count,message_revision_rate,safe_fix_selection_rate,approval_attempt_rate
+naive_supervisor,10,-8.0,-8.0,-8.0,0.0,1.0,0.0,0.0,0.0,1.0
+training_candidate_supervisor,10,1.1,-1.0,2.0,0.0,1.0,2.7,0.0,1.0,1.0
+cautious_supervisor,10,20.8,18.0,22.0,1.0,0.0,4.4,1.0,1.0,1.0
+trained_imitation_supervisor,10,20.8,18.0,22.0,1.0,0.0,4.4,1.0,1.0,1.0

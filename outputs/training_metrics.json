@@ -1,0 +1,68 @@
+{
+  "training_method": "tiny_imitation_fallback",
+  "expert_traces_used": 300,
+  "learned_plan": [
+    "assign_research",
+    "assign_ops",
+    "assign_policy",
+    "assign_communication",
+    "audit_ops",
+    "audit_policy",
+    "cross_check_research_and_ops",
+    "cross_check_research_and_communication",
+    "select_safe_fix",
+    "request_message_revision"
+  ],
+  "policy_summaries": {
+    "naive_supervisor": {
+      "episodes": 10,
+      "avg_reward": -8.0,
+      "min_reward": -8.0,
+      "max_reward": -8.0,
+      "success_rate": 0.0,
+      "unsafe_approval_rate": 1.0,
+      "avg_risk_detection_count": 0.0,
+      "message_revision_rate": 0.0,
+      "safe_fix_selection_rate": 0.0,
+      "approval_attempt_rate": 1.0
+    },
+    "training_candidate_supervisor": {
+      "episodes": 10,
+      "avg_reward": 1.1,
+      "min_reward": -1.0,
+      "max_reward": 2.0,
+      "success_rate": 0.0,
+      "unsafe_approval_rate": 1.0,
+      "avg_risk_detection_count": 2.7,
+      "message_revision_rate": 0.0,
+      "safe_fix_selection_rate": 1.0,
+      "approval_attempt_rate": 1.0
+    },
+    "cautious_supervisor": {
+      "episodes": 10,
+      "avg_reward": 20.8,
+      "min_reward": 18.0,
+      "max_reward": 22.0,
+      "success_rate": 1.0,
+      "unsafe_approval_rate": 0.0,
+      "avg_risk_detection_count": 4.4,
+      "message_revision_rate": 1.0,
+      "safe_fix_selection_rate": 1.0,
+      "approval_attempt_rate": 1.0
+    },
+    "trained_imitation_supervisor": {
+      "episodes": 10,
+      "avg_reward": 20.8,
+      "min_reward": 18.0,
+      "max_reward": 22.0,
+      "success_rate": 1.0,
+      "unsafe_approval_rate": 0.0,
+      "avg_risk_detection_count": 4.4,
+      "message_revision_rate": 1.0,
+      "safe_fix_selection_rate": 1.0,
+      "approval_attempt_rate": 1.0
+    }
+  },
+  "reward_logs_path": "/Users/aakashyadav/Desktop/shadow-supervisor-openenv/data/reward_logs.jsonl",
+  "trained_policy_path": "/Users/aakashyadav/Desktop/shadow-supervisor-openenv/outputs/trained_policy.json"
+}
